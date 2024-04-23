@@ -17,7 +17,6 @@ class Router {
 
     if (route) {
       const params = this.extractParams(route.path, pathname);
-      console.log(params);
       await route.handler(req, res, params);
     } else {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
