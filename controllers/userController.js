@@ -1,12 +1,14 @@
 const { ApiError } = require('../utils/ApiError.js');
 const { ApiResponse } = require('../utils/ApiResponse.js');
 
-async function getUser(req, res) {
+async function getUser(context) {
     try {
+        const { res } = context;
         const data = {
             name: 'Yaksh',
             age: 21
         };
+        console.log(data);
         const apiResponse = new ApiResponse(200, data, 'User Profile');
         res.writeHead(apiResponse.statusCode, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(apiResponse));
@@ -17,9 +19,11 @@ async function getUser(req, res) {
     }
 }
 
-async function getUserName(req, res) {
+async function getUserName(context) {
     try {
+        const { res } = context;
         const data = 'Yaksh Bhesaniya';
+        console.log(data);
         const apiResponse = new ApiResponse(200, data, 'User Name');
         res.writeHead(apiResponse.statusCode, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(apiResponse));
@@ -30,9 +34,12 @@ async function getUserName(req, res) {
     }
 }
 
-async function getUserByID(req, res, params) {
+async function getUserByID(context) {
     try {
+        const { res, params, queryParams } = context;
         const data = params;
+        console.log(data);
+        console.log(queryParams);
         const apiResponse = new ApiResponse(200, data, 'User By Id');
         res.writeHead(apiResponse.statusCode, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(apiResponse));

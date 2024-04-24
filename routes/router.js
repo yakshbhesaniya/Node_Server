@@ -1,27 +1,77 @@
 class Router {
   constructor() {
-    this.routes = [];
+    this.routes = {};
   }
 
-  get(path, handler) {
-    this.routes.push({ method: 'GET', path: this.parsePath(path), handler });
+  addRoute(method, path, ...middlewaresAndHandler) {
+    let handler;
+    let middlewares = [];
+
+    if (typeof middlewaresAndHandler[middlewaresAndHandler.length - 1] === 'function') {
+      handler = middlewaresAndHandler.pop();
+    }
+
+    middlewares = middlewaresAndHandler;
+
+    const route = { method, path: this.parsePath(path), middlewares, handler };
+    
+    if (!this.routes[method]) {
+      this.routes[method] = [];
+    }
+    
+    this.routes[method].push(route);
+  }
+
+  get(path, ...middlewaresAndHandler) {
+    this.addRoute('GET', path, ...middlewaresAndHandler);
+  }
+
+  post(path, ...middlewaresAndHandler) {
+    this.addRoute('POST', path, ...middlewaresAndHandler);
   }
 
   async handle(req, res) {
     const { method, url } = req;
-    const { pathname } = new URL(url, req.headers.host);
-    const route = this.routes.find(r => {
-      const pathMatch = r.path.exec(pathname);
-      return pathMatch && r.method === method;
-    });
+    const host = req.headers['host'];
+    const { pathname, searchParams } = new URL(url, `http://${host}`);
+    const route = this.findRoute(method, pathname);
 
     if (route) {
       const params = this.extractParams(route.path, pathname);
-      await route.handler(req, res, params);
+      const queryParams = Object.fromEntries(searchParams.entries());
+      const context = { req, res, params, queryParams };
+
+      await this.processMiddlewareAndHandler(context, route.middlewares, route.handler);
     } else {
-      res.writeHead(404, { 'Content-Type': 'text/plain' });
-      res.end('404 Not Found');
+      this.sendNotFoundError(res);
     }
+  }
+
+  findRoute(method, pathname) {
+    return this.routes[method].find(route => {
+      const pathMatch = route.path.exec(pathname);
+      return pathMatch !== null;
+    });
+  }
+
+  async processMiddlewareAndHandler(context, middlewares, handler) {
+    let index = 0;
+    const next = async () => {
+      if (index < middlewares.length) {
+        const middleware = middlewares[index++];
+        await middleware(context, next);
+      } else if (handler) {
+        await handler(context);
+      }
+    };
+
+    await next();
+  }
+
+  sendNotFoundError(res) {
+    const apiError = new ApiError(404, '404 Not Found');
+    res.writeHead(apiError.statusCode, { 'Content-Type': 'text/plain' });
+    res.end(JSON.stringify(apiError));
   }
 
   parsePath(path) {
@@ -30,12 +80,8 @@ class Router {
 
   extractParams(regex, pathname) {
     const match = regex.exec(pathname);
-    if (match) {
-      return match.slice(1);
-    }
-    return [];
+    return match ? match.slice(1) : [];
   }
-
 }
 
 const router = new Router();
