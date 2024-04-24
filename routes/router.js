@@ -65,7 +65,7 @@ class Router {
       const queryParams = Object.fromEntries(searchParams.entries());
       const context = { req, res, params, queryParams };
       const contentType = req.headers['Content-Type'] || req.headers['content-type'];
-      console.log(contentType);
+
       let body;
       if (contentType) {
         if (contentType.includes('application/json')) {

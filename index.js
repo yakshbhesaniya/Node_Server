@@ -14,7 +14,7 @@ const server = http.createServer((req, res) => {
         res.end();
         return;
     }
-    
+
     router.handle(req, res);
 });
 

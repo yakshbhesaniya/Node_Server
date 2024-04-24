@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const { ApiError } = require('../utils/ApiError.js');
 const { ApiResponse } = require('../utils/ApiResponse.js');
