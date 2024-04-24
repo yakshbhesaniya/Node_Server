@@ -1,6 +1,18 @@
+const { parse: parseUrlEncoded } = require('querystring');
+const formidable = require('formidable');
+const { ApiError } = require('../utils/ApiError.js');
+
 class Router {
   constructor() {
     this.routes = {};
+    // structure of this.routes:
+    // this.routes = {
+    //   GET: [],
+    //   POST: [],
+    //   PUT: [],
+    //   PATCH: [],
+    //   DELETE: []
+    // };
   }
 
   addRoute(method, path, ...middlewaresAndHandler) {
@@ -30,6 +42,18 @@ class Router {
     this.addRoute('POST', path, ...middlewaresAndHandler);
   }
 
+  put(path, ...middlewaresAndHandler) {
+    this.addRoute('PUT', path, ...middlewaresAndHandler);
+  }
+
+  patch(path, ...middlewaresAndHandler) {
+    this.addRoute('PATCH', path, ...middlewaresAndHandler);
+  }
+
+  delete(path, ...middlewaresAndHandler) {
+    this.addRoute('DELETE', path, ...middlewaresAndHandler);
+  }
+
   async handle(req, res) {
     const { method, url } = req;
     const host = req.headers['host'];
@@ -40,6 +64,24 @@ class Router {
       const params = this.extractParams(route.path, pathname);
       const queryParams = Object.fromEntries(searchParams.entries());
       const context = { req, res, params, queryParams };
+      const contentType = req.headers['Content-Type'] || req.headers['content-type'];
+      console.log(contentType);
+      let body;
+      if (contentType) {
+        if (contentType.includes('application/json')) {
+          body = await this.parseJsonBody(req);
+        } else if (contentType.includes('application/x-www-form-urlencoded')) {
+          body = await this.parseUrlEncodedBody(req);
+        } else if (contentType.includes('multipart/form-data')) {
+          body = await this.parseFormDataBody(req);
+        } else if (contentType.includes('text/plain')) {
+          body = await this.parsePlainTextBody(req);
+        } else {
+          body = null;
+          this.sendNotFoundError(res);
+        }
+      }
+      context.req.body = body;
 
       await this.processMiddlewareAndHandler(context, route.middlewares, route.handler);
     } else {
@@ -64,7 +106,6 @@ class Router {
         await handler(context);
       }
     };
-
     await next();
   }
 
@@ -81,6 +122,60 @@ class Router {
   extractParams(regex, pathname) {
     const match = regex.exec(pathname);
     return match ? match.slice(1) : [];
+  }
+
+  async parseJsonBody(req) {
+    return new Promise((resolve, reject) => {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        try {
+          resolve(JSON.parse(body));
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  async parseUrlEncodedBody(req) {
+    return new Promise((resolve, reject) => {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        resolve(parseUrlEncoded(body));
+      });
+    });
+  }
+
+  async parseFormDataBody(req) {
+    return new Promise((resolve, reject) => {
+      const form = new formidable.IncomingForm();
+  
+      form.parse(req, (err, fields, files) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve({ fields, files });
+        }
+      });
+    });
+  }
+
+  async parsePlainTextBody(req) {
+    return new Promise((resolve, reject) => {
+      let body = '';
+      req.on('data', chunk => {
+        body += chunk.toString();
+      });
+      req.on('end', () => {
+        resolve(body);
+      });
+    });
   }
 }
 

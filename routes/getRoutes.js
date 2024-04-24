@@ -2,20 +2,16 @@ const { router } = require('./router.js');
 const { getUser, getUserName, getUserByID } = require('../controllers/userController.js');
 const { middleware1, middleware2 } = require('../middlewares/userMiddleware.js');
 
-router.get('/user', async (context) => {
-    await getUser(context);
-});
+router.get('/user', getUser);
+router.get('/user/name', getUserName);
+router.get('/user/details/:id', middleware1, middleware2, getUserByID);
 
-router.get('/user/name', async (context) => {
-    await getUserName(context);
-});
+router.post('/user/details/:id', middleware1, middleware2, getUserByID);
 
-router.get('/user/details/:id', middleware1, middleware2, async (context) => {
-    await getUserByID(context);
-});
+router.put('/user/details/:id', middleware1, middleware2, getUserByID);
 
-router.post('/user/details/:id', middleware1, middleware2, async (context) => {
-    await getUserByID(context);
-});
+router.patch('/user/details/:id', middleware1, middleware2, getUserByID);
+
+router.delete('/user/name', middleware1, middleware2, getUserByID);
 
 module.exports = { router };
