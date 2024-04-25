@@ -36,13 +36,7 @@ class ApiResponse {
 
     sendFileResponse(res) {
         const fileStream = this.data;
-        const { 'Content-Type': contentType, 'Content-Disposition': contentDisposition } = this.headers;
-
-        res.writeHead(this.statusCode, {
-            'Content-Type': contentType,
-            'Content-Disposition': contentDisposition
-        });
-
+        res.writeHead(this.statusCode, this.headers);
         fileStream.pipe(res);
     }
 }
