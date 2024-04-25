@@ -11,13 +11,9 @@ async function getUser(context) {
             age: 21
         };
         console.log(data);
-        const apiResponse = new ApiResponse(200, data, 'User Profile');
-        res.writeHead(apiResponse.statusCode, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(apiResponse));
+        return new ApiResponse(200, data, 'User Profile', { 'Content-Type': 'application/json' }, res);
     } catch (error) {
-        const apiError = new ApiError(500, 'Internal Server Error');
-        res.writeHead(apiError.statusCode, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(apiError));
+        return new ApiError(500, 'Internal Server Error', res);
     }
 }
 
@@ -26,47 +22,36 @@ async function getUserName(context) {
     try {
         const data = 'Yaksh Bhesaniya';
         console.log(data);
-        console.log(req.method, "Hello");
-        const apiResponse = new ApiResponse(200, data, 'User Name');
-        res.writeHead(apiResponse.statusCode, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(apiResponse));
+        return new ApiResponse(200, data, 'User Name', { 'Content-Type': 'application/json' }, res);
     } catch (error) {
-        const apiError = new ApiError(500, 'Internal Server Error');
-        res.writeHead(apiError.statusCode, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(apiError));
+        return new ApiError(500, 'Internal Server Error', res);
     }
 }
 
 async function getUserByID(context) {
     const { req, res, params, queryParams } = context;
     try {
-        const data = params;
-        console.log(req.method, "Hello");
-        console.log(req.body, "Hello");
-        const apiResponse = new ApiResponse(200, data, 'User By Id');
-        res.writeHead(apiResponse.statusCode, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(apiResponse));
+        const data = paramse;
+        console.log(data);
+        return new ApiResponse(200, data, 'User By Id', { 'Content-Type': 'application/json' }, res);
     } catch (error) {
-        const apiError = new ApiError(500, 'Internal Server Error');
-        res.writeHead(apiError.statusCode, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(apiError));
+        return new ApiError(500, 'Internal Server Error', res);
     }
 }
 
 async function getImage(context) {
     const { req, res, params, queryParams } = context;
     try {
-        const filePath = path.join(__dirname, '1.png');
+        const cwd = process.cwd();
+        const filePath = path.join(cwd, 'public', '1.png');
         const fileStream = fs.createReadStream(filePath);
-        res.writeHead(200, {
-            'Content-Type': 'image/png', 
-            'Content-Disposition': 'inline; filename=1.png' 
-        });
-        fileStream.pipe(res);
+
+        return new ApiResponse(200, fileStream, 'Image', {
+            'Content-Type': 'image/png',
+            'Content-Disposition': 'inline; filename=1.png'
+        }, res);
     } catch (error) {
-        const apiError = new ApiError(500, 'Internal Server Error');
-        res.writeHead(apiError.statusCode, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(apiError));
+        return new ApiError(500, 'Internal Server Error', res);
     }
 }
 

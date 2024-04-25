@@ -1,5 +1,7 @@
 const { parse: parseUrlEncoded } = require('querystring');
 const formidable = require('formidable');
+const fs = require('fs');
+const path = require('path');
 const { ApiError } = require('../utils/ApiError.js');
 
 class Router {
@@ -110,9 +112,7 @@ class Router {
   }
 
   sendNotFoundError(res) {
-    const apiError = new ApiError(404, '404 Not Found');
-    res.writeHead(apiError.statusCode, { 'Content-Type': 'text/plain' });
-    res.end(JSON.stringify(apiError));
+    return new ApiError(404, 'Route Not Found', res);
   }
 
   parsePath(path) {
