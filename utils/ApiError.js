@@ -5,7 +5,11 @@ class ApiError extends Error {
         this.data = null;
         this.message = message;
         this.success = false;
-        this.sendErrorResponse(res); 
+        if (this.shouldRedirect(statusCode)) {
+            this.redirectResponse(res);
+        } else {
+            this.sendErrorResponse(res);
+        }; 
     }
 
     generateErrorResponse() {
@@ -18,6 +22,16 @@ class ApiError extends Error {
                 success: this.success
             })
         };
+    }
+
+    shouldRedirect(statusCode) {
+        return statusCode >= 300 && statusCode < 400;
+    }
+
+    redirectResponse(res) {
+        const errorResponse = this.generateErrorResponse();
+        res.writeHead(errorResponse.statusCode, { 'Location': this.message });
+        res.end();
     }
 
     sendErrorResponse(res) {

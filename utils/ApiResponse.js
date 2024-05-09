@@ -10,6 +10,8 @@ class ApiResponse {
 
         if (data instanceof fs.ReadStream) {
             this.sendFileResponse(res);
+        }else if (this.shouldRedirect(statusCode)) {
+            this.redirectResponse(res);
         } else {
             this.sendHttpResponse(res);
         }
@@ -26,6 +28,16 @@ class ApiResponse {
                 success: this.success
             })
         };
+    }
+
+    shouldRedirect(statusCode) {
+        return statusCode >= 300 && statusCode < 400;
+    }
+
+    redirectResponse(res) {
+        const httpResponse = this.generateHttpResponse();
+        res.writeHead(httpResponse.statusCode, httpResponse.headers);
+        res.end();    
     }
 
     sendHttpResponse(res) {
