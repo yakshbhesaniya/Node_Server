@@ -76,6 +76,12 @@ class Router {
           body = await this.parseUrlEncodedBody(req);
         } else if (contentType.includes('multipart/form-data')) {
           body = await this.parseFormDataBody(req);
+          const transformedFields = {};
+          Object.keys(body.fields).forEach(key => {
+            transformedFields[key] = body.fields[key][0];
+          });
+          body.fields = transformedFields;
+          body = { ...body.fields, files: body.files };
         } else if (contentType.includes('text/plain')) {
           body = await this.parsePlainTextBody(req);
         } else {
